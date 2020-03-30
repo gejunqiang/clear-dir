@@ -4,12 +4,13 @@ Delete a file or directory in each k8s node by DaemonSet
 
 ## Example
 
+to delete the directory: `/root/parentDir/dirToDelete` :
+
 ```
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   name: clear-dir
-  namespace: kube-system
 spec:
   selector:
     matchLabels:
@@ -21,6 +22,7 @@ spec:
     spec:
       containers:
       - image: gejunqiang/paused:latest
+        imagePullPolicy: Always
         name: paused
         resources:
           limits:
@@ -28,18 +30,19 @@ spec:
             memory: 100Mi
       initContainers:
       - image: gejunqiang/clear-dir:latest
+        imagePullPolicy: Always
         name: cleaner
         command:
         - clear-dir
-        - <dirOrFileToDelete>
+        - /parent-dir/dirToDelete
         volumeMounts:
         - mountPath: /parent-dir
           name: parent-dir
-      tolerations:
+      tolerations: # include master node
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
       volumes:
       - hostPath:
-          path: <theParentDirOfDirOrFileToDelete>
+          path: /root/parentDir
         name: parent-dir
 ```
